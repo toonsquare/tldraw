@@ -20,7 +20,6 @@ import {
 	TldrawUiMenuGroup,
 	TldrawUiMenuItem,
 	ViewSubmenu,
-	tltime,
 	useActions,
 	useCollaborationStatus,
 	useEditor,
@@ -148,28 +147,9 @@ export function TlaEditor({
 		const user = app.getUser(auth.userId)
 		if (!user) throw Error('User not found')
 
-		let cancelled = false
-		let didEnter = false
-
-		// Only mark as entered after one second
-		// TODO TODO but why though...? b/c it's trying to create the file?
-		const timeout = tltime.setTimeout(
-			'app',
-			() => {
-				if (cancelled) return
-				didEnter = true
-				app.onFileEnter(fileId)
-			},
-			1000
-		)
-
+		app.onFileEnter(fileId)
 		return () => {
-			cancelled = true
-			clearTimeout(timeout)
-
-			if (didEnter) {
-				app.onFileExit(fileId)
-			}
+			app.onFileExit(fileId)
 		}
 	}, [app, fileId])
 
@@ -242,13 +222,10 @@ function SneakyFileUpdateHandler({
 	const app = useMaybeApp()
 	const editor = useEditor()
 	useEffect(() => {
-		const fileStartTime = Date.now()
 		return editor.store.listen(
 			() => {
 				if (!app) return
-				const sessionState = getLocalSessionState()
-				if (!sessionState.auth) throw Error('Auth not found')
-				app.onFileEdit(fileId, sessionState.createdAt, fileStartTime)
+				app.onFileEdit(fileId)
 				onDocumentChange?.()
 			},
 			{ scope: 'document', source: 'user' }
