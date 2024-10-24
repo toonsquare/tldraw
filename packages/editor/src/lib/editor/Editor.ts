@@ -5018,7 +5018,7 @@ export class Editor extends EventEmitter<TLEventMap> {
 	) {
 		const shape = typeof arg === 'string' ? this.getShape(arg) : arg
 		if (!shape) return false
-		return shape.type === type
+		return shape.type === type || shape.type.includes(type)
 	}
 
 	/**
