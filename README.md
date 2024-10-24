@@ -1,3 +1,33 @@
+# tldraw를 따로 관리하는 이유?
+- 현재 tldraw는 많은 whiteboard 라이브러리 중에서 custom이 그나마 되는 편
+- 그럼에도 불구하고 private method들로 인해 어쩔 수 없이 custom이 불가능한 경우가 존재함
+- 따라서 소스 코드 단에서 커스텀해야함
+
+# 작업 순서
+```angular2html
+1. 세팅
+  a. git clone https://github.com/toonsquare/tldraw.git
+  b. cd tldraw
+  c. yarn 없으면 먼저 설치
+  d. corepack enable
+  e. yarn
+2. 소스 코드 수정
+3. toonsquare/tldraw에 수정사항 PR 및 머지
+4. 최상단 디렉토리로 이동
+5. yarn build
+6. 수정한 코드가 포함된 패키지 디렉토리 내에서 아래 진행
+  a. package.json 내의 "pack-tarball" 스크립트 실행
+  b. 실행 결과로 나온 package.tgz 의 압축을 풀어서 내부 파일들을 toonsquare-monorepo/packages 내로 이동
+  c. 해당 파일들 중 package.json 내의 일부 패키지 버전을 workspace:*로 수정 및 scripts 내에 "build" 삭제
+    가. 패키지 버전은 3가지를 수정해야함. tldraw, @tldraw/editor, @tldraw/store
+7. toonsquare-monorepo에 PR 및 머지
+```
+
+# 버전 규칙
+- 버전은 항상 tldraw의 릴리즈 버전을 따라감
+- tldraw의 realease를 항상 바탕으로 'v3.2.2-custom0'과 같은 브랜치명을 메인으로 잡음
+
+***
 # tldraw
 
 Welcome to the public monorepo for [tldraw](https://github.com/tldraw/tldraw). tldraw is a library for creating infinite canvas experiences in React. It's the software behind the digital whiteboard [tldraw.com](https://tldraw.com).
