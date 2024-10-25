@@ -19,13 +19,22 @@
   a. package.json 내의 "pack-tarball" 스크립트 실행
   b. 실행 결과로 나온 package.tgz 의 압축을 풀어서 내부 파일들을 toonsquare-monorepo/packages 내로 이동
   c. 해당 파일들 중 package.json 내의 일부 패키지 버전을 workspace:*로 수정 및 scripts 내에 "build" 삭제
-    가. 패키지 버전은 3가지를 수정해야함. tldraw, @tldraw/editor, @tldraw/store
+    가. 패키지 버전은 3가지를 수정해야함. tldraw, @tldraw/editor, @tldraw/sync
 7. toonsquare-monorepo에 PR 및 머지
 ```
 
 # 버전 규칙
-- 버전은 항상 tldraw의 릴리즈 버전을 따라감
-- tldraw의 realease를 항상 바탕으로 'v3.2.2-custom0'과 같은 브랜치명을 메인으로 잡음
+- 버전은 항상 tldraw의 릴리즈 버전을 따라가며, 우리의 메인 브랜치는 toonsquare-custom
+- 커스텀으로 인해 우리쪽 코드를 써야하는 부분 외에 릴리즈가 될경우 항상 버전 업데이트를 진행 해준다.
+  - 현재 우리가 따로 쓰는 패키지는 tldraw, @tldraw/editor, @tldraw/sync
+  - 나머지는 npm 저장소에서 끌어오기 때문에 항상 릴리즈 버전을 맞춰 업데이트를 하지 않으면 문제가 생김
+- 버전 업데이트 진행 순서는 아래와 같음
+```angular2html
+1. (원본 레포가 upstream으로 추가되어있지 않다면) git remote add upstream https://github.com/tldraw/tldraw.git
+2. 최신화 진행 - git fetch upstream
+3. 최신 릴리즈 브랜치를 toonsquare-custom으로 머지
+4. remote에 push하고 위 작업 순서에 따라 모노레포에 수정까지 진행
+```
 
 ***
 # tldraw
