@@ -29,7 +29,7 @@ import { TLCameraOptions } from './editor/types/misc-types'
 import { ContainerProvider, useContainer } from './hooks/useContainer'
 import { useCursor } from './hooks/useCursor'
 import { useDarkMode } from './hooks/useDarkMode'
-import { EditorContext, useEditor } from './hooks/useEditor'
+import { EditorProvider, useEditor } from './hooks/useEditor'
 import {
 	EditorComponentsProvider,
 	TLEditorComponents,
@@ -222,6 +222,7 @@ export const TldrawEditor = memo(function TldrawEditor({
 	components,
 	className,
 	user: _user,
+	options: _options,
 	...rest
 }: TldrawEditorProps) {
 	const [container, setContainer] = useState<HTMLElement | null>(null)
@@ -239,6 +240,7 @@ export const TldrawEditor = memo(function TldrawEditor({
 		bindingUtils: rest.bindingUtils ?? EMPTY_BINDING_UTILS_ARRAY,
 		tools: rest.tools ?? EMPTY_TOOLS_ARRAY,
 		components,
+		options: useShallowObjectIdentity(_options),
 	}
 
 	return (
@@ -550,12 +552,12 @@ function TldrawEditorWithReadyStore({
 			{crashingError ? (
 				<Crash crashingError={crashingError} />
 			) : (
-				<EditorContext.Provider value={editor}>
+				<EditorProvider editor={editor}>
 					<Layout onMount={onMount}>
 						{children ?? (Canvas ? <Canvas /> : null)}
 						<Watermark />
 					</Layout>
-				</EditorContext.Provider>
+				</EditorProvider>
 			)}
 		</OptionalErrorBoundary>
 	)

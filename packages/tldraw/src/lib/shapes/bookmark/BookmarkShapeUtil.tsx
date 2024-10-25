@@ -147,9 +147,7 @@ function BookmarkShapeComponent({
 						) : (
 							<div className="tl-bookmark__placeholder" />
 						)}
-						{asset?.props.image && (
-							<HyperlinkButton url={shape.props.url} zoomLevel={util.editor.getZoomLevel()} />
-						)}
+						{asset?.props.image && <HyperlinkButton url={shape.props.url} />}
 					</div>
 				)}
 				<div className="tl-bookmark__copy_container">
@@ -227,7 +225,7 @@ export const getHumanReadableAddress = (shape: TLBookmarkShape) => {
 		const url = new URL(shape.props.url)
 		// we want the hostname without any www
 		return url.hostname.replace(/^www\./, '')
-	} catch (e) {
+	} catch {
 		return shape.props.url
 	}
 }
