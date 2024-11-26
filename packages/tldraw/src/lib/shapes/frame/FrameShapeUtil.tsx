@@ -43,7 +43,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 	}
 
 	override getDefaultProps(): TLFrameShape['props'] {
-		return { w: 160 * 2, h: 90 * 2, name: '' }
+		return { w: 160 * 2, h: 90 * 2, name: '', fill:'#FFFFFF' }
 	}
 
 	override getGeometry(shape: TLFrameShape): Geometry2d {
@@ -85,7 +85,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 						className={classNames('tl-frame__body', { 'tl-frame__creating': isCreating })}
 						width={bounds.width}
 						height={bounds.height}
-						fill={theme.solid}
+						fill={shape.props.fill}
 						stroke={theme.text}
 					/>
 				</SVGContainer>
@@ -167,7 +167,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 				<rect
 					width={shape.props.w}
 					height={shape.props.h}
-					fill={theme.solid}
+					fill={shape.props.fill}
 					stroke={theme.black.solid}
 					strokeWidth={1}
 					rx={1}
