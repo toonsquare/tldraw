@@ -64,6 +64,7 @@ export function getOccludedChildren(editor: Editor, parent: TLShape) {
 
 	for (const childId of childIds) {
 		const shapePageBounds = editor.getShapePageBounds(childId)
+
 		if (!shapePageBounds) {
 			// Not occluded, shape doesn't exist
 			continue
@@ -72,6 +73,11 @@ export function getOccludedChildren(editor: Editor, parent: TLShape) {
 		if (!parentPageBounds.includes(shapePageBounds)) {
 			// Not in shape's bounds, shape is occluded
 			results.push(childId)
+			continue
+		}
+
+		if (parent.type === 'frameCut') {
+			// 컷은 자식이 커도 꺼내지 않도록 한다.
 			continue
 		}
 

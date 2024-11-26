@@ -4384,12 +4384,27 @@ export class Editor extends EventEmitter<TLEventMap> {
 			if (frameAncestors.length === 0) return undefined
 
 			const pageMask = frameAncestors
-				.map<Vec[] | undefined>((s) =>
-					// Apply the frame transform to the frame outline to get the frame outline in the current page space
-					this._getShapePageTransformCache()
-						.get(s.id)!
-						.applyToPoints(this.getShapeGeometry(s).vertices)
-				)
+				.map<Vec[] | undefined>((s) => {
+					//TODO:frame의 경우, zoomlevel에 따라 stroke width가 ㄷ라라지고 있기 때문에 일단 이렇게 처리함, 추가적으로 다운로드할때 줌상태에따라 페이지 외곽의 여백이 달라지는 문제 있음
+					const strokeWidth = s.props?.hasOwnProperty('strokeWidth') ? s.props.strokeWidth : 1 / this.getZoomLevel();
+					const geometry = this.getShapeGeometry(s);
+					const vertices = geometry.vertices;
+					const centroid = vertices
+						.reduce((sum, vertex) => sum.add(vertex), new Vec(0, 0))
+						.div(vertices.length);
+
+					// 축소된 경계 계산
+					const contractedVertices = vertices.map((vertex) => {
+						// x, y 각각 strokeWidth / 2만큼 축소
+						return new Vec(
+							vertex.x > centroid.x ? vertex.x - strokeWidth / 2 : vertex.x + strokeWidth / 2,
+							vertex.y > centroid.y ? vertex.y - strokeWidth / 2 : vertex.y + strokeWidth / 2
+						);
+					});
+
+				  // Apply the frame transform to the frame outline to get the frame outline in the current page space
+					return this._getShapePageTransformCache().get(s.id).applyToPoints(contractedVertices)
+				})
 				.reduce((acc, b) => {
 					if (!(b && acc)) return undefined
 					const intersection = intersectPolygonPolygon(acc, b)
