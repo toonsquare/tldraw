@@ -7,8 +7,7 @@ import { TLBaseShape } from './TLBaseShape'
 export interface TLFrameShapeProps {
 	w: number
 	h: number
-	name: string,
-	fill: string
+	name: string
 }
 
 /** @public */
@@ -19,7 +18,6 @@ export const frameShapeProps: RecordProps<TLFrameShape> = {
 	w: T.nonZeroNumber,
 	h: T.nonZeroNumber,
 	name: T.string,
-	fill: T.string
 }
 
 /** @public */

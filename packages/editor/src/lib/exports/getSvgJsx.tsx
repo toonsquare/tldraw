@@ -302,15 +302,6 @@ function SvgExport({
 		onMount()
 	}, [onMount, shapeElements])
 
-	// 하나가 선택된 상태로 내보내기 할때 배경색이 있는 shape는 그 배경색 반영하도록 코드 추가함
-	let existOnlyFill = undefined;
-	if (renderingShapes.length===1) {
-		const props = renderingShapes[0]?.shape?.props;
-		if (props && 'fill' in props) {
-			existOnlyFill = props.fill;
-		}
-	}
-
 	return (
 		<SvgExportContextProvider editor={editor} context={exportContext}>
 			<svg
@@ -323,11 +314,9 @@ function SvgExport({
 				strokeLinejoin="round"
 				style={{
 					backgroundColor: background
-						? existOnlyFill
-							? existOnlyFill
-								: singleFrameShapeId
-								? theme.solid
-									: theme.background
+						? singleFrameShapeId
+							? theme.solid
+							: theme.background
 						: 'transparent',
 				}}
 				data-color-mode={isDarkMode ? 'dark' : 'light'}

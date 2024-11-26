@@ -4385,12 +4385,8 @@ export class Editor extends EventEmitter<TLEventMap> {
 
 			const pageMask = frameAncestors
 				.map<Vec[] | undefined>((s) => {
-					//TODO:frame의 경우, zoomlevel에 따라 stroke width가 달라지고 있기 때문에 일단 이렇게 처리함, 추가적으로 다운로드할때 줌상태에따라 페이지 외곽의 여백이 달라지는 문제 있음
-					const props = s.props;
-					let strokeWidth = 1 / this.getZoomLevel()
-					if (props && 'strokeWidth' in props) {
-						strokeWidth = props.strokeWidth as number;
-					}
+					//TODO:frame의 경우, zoomlevel에 따라 stroke width가 ㄷ라라지고 있기 때문에 일단 이렇게 처리함, 추가적으로 다운로드할때 줌상태에따라 페이지 외곽의 여백이 달라지는 문제 있음
+					const strokeWidth = s.props?.hasOwnProperty('strokeWidth') ? s.props.strokeWidth : 1 / this.getZoomLevel();
 					const geometry = this.getShapeGeometry(s);
 					const vertices = geometry.vertices;
 					const centroid = vertices
@@ -4407,7 +4403,7 @@ export class Editor extends EventEmitter<TLEventMap> {
 					});
 
 				  // Apply the frame transform to the frame outline to get the frame outline in the current page space
-					return this._getShapePageTransformCache().get(s.id)!.applyToPoints(contractedVertices)
+					return this._getShapePageTransformCache().get(s.id).applyToPoints(contractedVertices)
 				})
 				.reduce((acc, b) => {
 					if (!(b && acc)) return undefined
