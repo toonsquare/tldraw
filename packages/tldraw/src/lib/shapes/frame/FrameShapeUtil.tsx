@@ -85,7 +85,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 						className={classNames('tl-frame__body', { 'tl-frame__creating': isCreating })}
 						width={bounds.width}
 						height={bounds.height}
-						fill={theme.solid}
+						fill={(shape.meta.fill as string) || theme.solid}
 						stroke={theme.text}
 					/>
 				</SVGContainer>
@@ -167,7 +167,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 				<rect
 					width={shape.props.w}
 					height={shape.props.h}
-					fill={theme.solid}
+					fill={(shape.meta.fill as string) || theme.solid}
 					stroke={theme.black.solid}
 					strokeWidth={1}
 					rx={1}
