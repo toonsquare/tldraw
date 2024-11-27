@@ -4407,7 +4407,7 @@ export class Editor extends EventEmitter<TLEventMap> {
 					});
 
 				  // Apply the frame transform to the frame outline to get the frame outline in the current page space
-					return this._getShapePageTransformCache().get(s.id).applyToPoints(contractedVertices)
+					return this._getShapePageTransformCache().get(s.id)!.applyToPoints(contractedVertices)
 				})
 				.reduce((acc, b) => {
 					if (!(b && acc)) return undefined
