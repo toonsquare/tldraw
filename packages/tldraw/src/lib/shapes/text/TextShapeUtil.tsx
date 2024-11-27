@@ -96,7 +96,7 @@ export class TextShapeUtil extends ShapeUtil<TLTextShape> {
 				align={textAlign}
 				verticalAlign="middle"
 				text={text}
-				labelColor={theme[color].solid}
+				labelColor={ shape.meta.fill as string || theme[color].solid}
 				isSelected={isSelected}
 				textWidth={width}
 				textHeight={height}
@@ -133,7 +133,7 @@ export class TextShapeUtil extends ShapeUtil<TLTextShape> {
 				align={shape.props.textAlign}
 				verticalAlign="middle"
 				text={shape.props.text}
-				labelColor={theme[shape.props.color].solid}
+				labelColor={ shape.meta.fill as string || theme[shape.props.color].solid}
 				bounds={new Box(0, 0, width, height)}
 				padding={0}
 			/>
