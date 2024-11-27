@@ -36,6 +36,7 @@ import { ExportDelay } from './ExportDelay'
 
 export function getSvgJsx(editor: Editor, ids: TLShapeId[], opts: TLImageExportOptions = {}) {
 	if (!window.document) throw Error('No document')
+	debugger;
 
 	const {
 		scale = 1,
@@ -177,7 +178,8 @@ function SvgExport({
 			const unorderedShapeElementPromises = renderingShapes.map(
 				async ({ id, opacity, index, backgroundIndex }) => {
 					// Don't render the frame if we're only exporting a single frame and it's children
-					if (id === singleFrameShapeId) return []
+					// if (id === singleFrameShapeId) return []
+					// 우리는 frame도 렌더링해야한다(배경색때문에)
 
 					const shape = editor.getShape(id)!
 
@@ -302,15 +304,6 @@ function SvgExport({
 		onMount()
 	}, [onMount, shapeElements])
 
-	// 하나가 선택된 상태로 내보내기 할때 배경색이 있는 shape는 그 배경색 반영하도록 코드 추가함
-	let existOnlyFill = undefined;
-	if (renderingShapes.length===1) {
-		const props = renderingShapes[0]?.shape?.props;
-		if (props && 'fill' in props) {
-			existOnlyFill = props.fill;
-		}
-	}
-
 	return (
 		<SvgExportContextProvider editor={editor} context={exportContext}>
 			<svg
@@ -323,11 +316,9 @@ function SvgExport({
 				strokeLinejoin="round"
 				style={{
 					backgroundColor: background
-						? existOnlyFill
-							? existOnlyFill
-							: singleFrameShapeId
-								? theme.solid
-								: theme.background
+						? singleFrameShapeId
+							? theme.solid
+							: theme.background
 						: 'transparent',
 				}}
 				data-color-mode={isDarkMode ? 'dark' : 'light'}
