@@ -253,6 +253,10 @@ export class Drawing extends StateNode {
 				type: this.shapeType,
 				x: originPagePoint.x,
 				y: originPagePoint.y,
+				meta: {
+					// @ts-ignore
+					stroke:this.parent.initialStroke
+				},
 				props: {
 					isPen: this.isPenOrStylus,
 					scale: this.editor.user.getIsDynamicResizeMode() ? 1 / this.editor.getZoomLevel() : 1,

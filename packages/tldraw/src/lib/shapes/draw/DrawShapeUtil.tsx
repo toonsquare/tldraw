@@ -251,7 +251,7 @@ function DrawShapeSvg({ shape, zoomOverride }: { shape: TLDrawShape; zoomOverrid
 							shape.props.isClosed
 						)}
 						theme={theme}
-						color={shape.props.color}
+						color={shape.meta.stroke as 'black' || shape.props.color}
 						fill={shape.props.isClosed ? shape.props.fill : 'none'}
 						scale={shape.props.scale}
 					/>
@@ -259,7 +259,7 @@ function DrawShapeSvg({ shape, zoomOverride }: { shape: TLDrawShape; zoomOverrid
 				<path
 					d={svgInk(allPointsFromSegments, options)}
 					strokeLinecap="round"
-					fill={theme[shape.props.color].solid}
+					fill={shape.meta.stroke as 'black' || theme[shape.props.color].solid}
 				/>
 			</>
 		)
@@ -276,7 +276,7 @@ function DrawShapeSvg({ shape, zoomOverride }: { shape: TLDrawShape; zoomOverrid
 			<ShapeFill
 				d={solidStrokePath}
 				theme={theme}
-				color={shape.props.color}
+				color={shape.meta.stroke as 'black' || shape.props.color}
 				fill={isDot || shape.props.isClosed ? shape.props.fill : 'none'}
 				scale={shape.props.scale}
 			/>
@@ -284,7 +284,7 @@ function DrawShapeSvg({ shape, zoomOverride }: { shape: TLDrawShape; zoomOverrid
 				d={solidStrokePath}
 				strokeLinecap="round"
 				fill={isDot ? theme[shape.props.color].solid : 'none'}
-				stroke={theme[shape.props.color].solid}
+				stroke={shape.meta.stroke as 'black' || theme[shape.props.color].solid}
 				strokeWidth={sw}
 				strokeDasharray={isDot ? 'none' : getDrawShapeStrokeDashArray(shape, sw, dotAdjustment)}
 				strokeDashoffset="0"

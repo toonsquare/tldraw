@@ -12,6 +12,11 @@ export class DrawShapeTool extends StateNode {
 	}
 
 	override shapeType = 'draw'
+	public initialStroke = '#242424'
+
+	override onEnter(info:any, from:string) {
+		this.initialStroke = info.stroke || '#242424';
+	}
 
 	override onExit() {
 		const drawingState = this.children!['drawing'] as Drawing
