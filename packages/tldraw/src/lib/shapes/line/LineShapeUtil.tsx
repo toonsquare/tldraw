@@ -169,7 +169,7 @@ export class LineShapeUtil extends ShapeUtil<TLLineShape> {
 	}
 
 	indicator(shape: TLLineShape) {
-		const strokeWidth = STROKE_SIZES[shape.props.size] * shape.props.scale
+		const strokeWidth = (shape.meta.strokeWidth as number || STROKE_SIZES[shape.props.size]) * shape.props.scale
 		const spline = getGeometryForLineShape(shape)
 		const { dash } = shape.props
 
@@ -326,7 +326,7 @@ function LineShapeSvg({
 
 	const scale = shouldScale ? scaleFactor : 1
 
-	const strokeWidth = STROKE_SIZES[size] * shape.props.scale
+	const strokeWidth = (shape.meta.strokeWidth as number || STROKE_SIZES[shape.props.size]) * shape.props.scale
 
 	// Line style lines
 	if (shape.props.spline === 'line') {
@@ -337,7 +337,7 @@ function LineShapeSvg({
 			return (
 				<path
 					d={pathData}
-					stroke={theme[color].solid}
+					stroke={shape.meta.stroke as string || theme[color].solid}
 					strokeWidth={strokeWidth}
 					fill="none"
 					transform={`scale(${scale})`}
@@ -347,7 +347,7 @@ function LineShapeSvg({
 
 		if (dash === 'dashed' || dash === 'dotted') {
 			return (
-				<g stroke={theme[color].solid} strokeWidth={strokeWidth} transform={`scale(${scale})`}>
+				<g stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} transform={`scale(${scale})`}>
 					{spline.segments.map((segment, i) => {
 						const { strokeDasharray, strokeDashoffset } = forceSolid
 							? { strokeDasharray: 'none', strokeDashoffset: 'none' }
@@ -378,7 +378,7 @@ function LineShapeSvg({
 			return (
 				<path
 					d={outerPathData}
-					stroke={theme[color].solid}
+					stroke={shape.meta.stroke as string || theme[color].solid}
 					strokeWidth={strokeWidth}
 					fill="none"
 					transform={`scale(${scale})`}
@@ -393,7 +393,7 @@ function LineShapeSvg({
 			return (
 				<path
 					strokeWidth={strokeWidth}
-					stroke={theme[color].solid}
+					stroke={shape.meta.stroke as string || theme[color].solid}
 					fill="none"
 					d={splinePath}
 					transform={`scale(${scale})`}
@@ -403,7 +403,7 @@ function LineShapeSvg({
 
 		if (dash === 'dashed' || dash === 'dotted') {
 			return (
-				<g stroke={theme[color].solid} strokeWidth={strokeWidth} transform={`scale(${scale})`}>
+				<g stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} transform={`scale(${scale})`}>
 					{spline.segments.map((segment, i) => {
 						const { strokeDasharray, strokeDashoffset } = getPerfectDashProps(
 							segment.length,
@@ -435,8 +435,8 @@ function LineShapeSvg({
 				<path
 					d={getLineDrawPath(shape, spline, strokeWidth)}
 					strokeWidth={1}
-					stroke={theme[color].solid}
-					fill={theme[color].solid}
+					stroke={shape.meta.stroke as string || theme[color].solid}
+					fill={shape.meta.stroke as string || theme[color].solid}
 					transform={`scale(${scale})`}
 				/>
 			)
