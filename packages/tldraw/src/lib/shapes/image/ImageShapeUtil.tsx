@@ -291,10 +291,18 @@ const ImageShape = memo(function ImageShape({ shape }: { shape: TLImageShape }) 
 	// have that set up.
 	const crossOrigin = isAnimated ? 'anonymous' : undefined
 
+	// 이미지 필터 적용
+	const blur = shape.meta.blur ? shape.meta.blur as number / 2 : 0;
+	const brightness = shape.meta.brightness ? shape.meta.brightness as number + 100 : 100;
+	const contrast = shape.meta.contrast ? shape.meta.contrast as number + 100 : 100;
+	const saturate = shape.meta.saturate ? shape.meta.saturate as number + 100: 100;
+	const hueRotate = shape.meta.hueRotate ? shape.meta.hueRotate as number * 1.8 : 0;
+	const filter = `blur(${blur}px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%) hue-rotate(${hueRotate}deg)`
+
 	return (
 		<>
 			{showCropPreview && loadedSrc && (
-				<div style={containerStyle}>
+				<div style={{ ...containerStyle, filter }}>
 					<img
 						className="tl-image"
 						style={{ ...getFlipStyle(shape), opacity: 0.1 }}
@@ -307,7 +315,7 @@ const ImageShape = memo(function ImageShape({ shape }: { shape: TLImageShape }) 
 			)}
 			<HTMLContainer
 				id={shape.id}
-				style={{ overflow: 'hidden', width: shape.props.w, height: shape.props.h }}
+				style={{ overflow: 'hidden', width: shape.props.w, height: shape.props.h, filter }}
 			>
 				<div className={classNames('tl-image-container')} style={containerStyle}>
 					{/* We have two images: the currently loaded image, and the next image that
@@ -407,6 +415,14 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 	const cropClipId = useUniqueSafeId()
 	const containerStyle = getCroppedContainerStyle(shape)
 	const crop = shape.props.crop
+	// 이미지 필터 적용
+	const blur = shape.meta.blur ? shape.meta.blur as number / 2 : 0;
+	const brightness = shape.meta.brightness ? shape.meta.brightness as number + 100 : 100;
+	const contrast = shape.meta.contrast ? shape.meta.contrast as number + 100 : 100;
+	const saturate = shape.meta.saturate ? shape.meta.saturate as number + 100: 100;
+	const hueRotate = shape.meta.hueRotate ? shape.meta.hueRotate as number * 1.8 : 0;
+	const filter = `blur(${blur}px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%) hue-rotate(${hueRotate}deg)`
+
 	if (containerStyle.transform && crop) {
 		const { transform: cropTransform, width, height } = containerStyle
 		const croppedWidth = (crop.bottomRight.x - crop.topLeft.x) * width
@@ -435,8 +451,8 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 						height={height}
 						style={
 							flip
-								? { ...flip, transform: `${cropTransform} ${flip.transform}` }
-								: { transform: cropTransform }
+								? { ...flip, transform: `${cropTransform} ${flip.transform}`,filter }
+								: { transform: cropTransform,filter }
 						}
 					/>
 				</g>
@@ -448,7 +464,10 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 				href={src}
 				width={shape.props.w}
 				height={shape.props.h}
-				style={getFlipStyle(shape, { width: shape.props.w, height: shape.props.h })}
+				style={{
+					...getFlipStyle(shape, { width: shape.props.w, height: shape.props.h }),
+					filter
+				}}
 			/>
 		)
 	}
