@@ -1,25 +1,33 @@
-import { TldrawAppFileId, TldrawAppFileRecordType } from '@tldraw/dotcom-shared'
+import { useAuth } from '@clerk/clerk-react'
+import { TlaFileOpenMode } from '@tldraw/dotcom-shared'
 import { useSync } from '@tldraw/sync'
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { fileSave } from 'browser-fs-access'
+import { useCallback, useEffect, useMemo } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { useParams } from 'react-router-dom'
 import {
 	DefaultKeyboardShortcutsDialog,
 	DefaultKeyboardShortcutsDialogContent,
-	DefaultStylePanel,
 	Editor,
 	OfflineIndicator,
-	PeopleMenu,
 	TLComponents,
+	TLDRAW_FILE_EXTENSION,
 	TLSessionStateSnapshot,
+	TLStore,
+	TLUiOverrides,
 	Tldraw,
 	TldrawUiMenuGroup,
 	TldrawUiMenuItem,
+	assert,
 	createSessionStateSnapshotSignal,
 	react,
+	serializeTldrawJsonBlob,
 	throttle,
+	tltime,
 	useActions,
 	useCollaborationStatus,
 	useEditor,
+	useValue,
 } from 'tldraw'
 import { ThemeUpdater } from '../../../components/ThemeUpdater/ThemeUpdater'
 import { assetUrls } from '../../../utils/assetUrls'
@@ -30,12 +38,18 @@ import { multiplayerAssetStore } from '../../../utils/multiplayerAssetStore'
 import { SAVE_FILE_COPY_ACTION } from '../../../utils/useFileSystem'
 import { useHandleUiEvents } from '../../../utils/useHandleUiEvent'
 import { useMaybeApp } from '../../hooks/useAppState'
+import { ReadyWrapper, useSetIsReady } from '../../hooks/useIsReady'
 import { getSnapshotsFromDroppedTldrawFiles } from '../../hooks/useTldrFileDrop'
 import { useTldrawUser } from '../../hooks/useUser'
+import { defineMessages, useMsg } from '../../utils/i18n'
 import { SneakyDarkModeSync } from './SneakyDarkModeSync'
 import { TlaEditorTopLeftPanel } from './TlaEditorTopLeftPanel'
 import { TlaEditorTopRightPanel } from './TlaEditorTopRightPanel'
 import styles from './editor.module.css'
+
+const messages = defineMessages({
+	file: { defaultMessage: 'File' },
+})
 
 /** @internal */
 export const components: TLComponents = {
@@ -46,7 +60,7 @@ export const components: TLComponents = {
 		const actions = useActions()
 		return (
 			<DefaultKeyboardShortcutsDialog {...props}>
-				<TldrawUiMenuGroup label="shortcuts-dialog.file" id="file">
+				<TldrawUiMenuGroup label={useMsg(messages.file)} id="file">
 					<TldrawUiMenuItem {...actions[SAVE_FILE_COPY_ACTION]} />
 				</TldrawUiMenuGroup>
 				<DefaultKeyboardShortcutsDialogContent />
@@ -58,59 +72,65 @@ export const components: TLComponents = {
 		return <TlaEditorTopLeftPanel isAnonUser={!app} />
 	},
 	SharePanel: () => {
-		return <TlaEditorTopRightPanel />
+		const app = useMaybeApp()
+		const fileSlug = useParams<{ fileSlug: string }>().fileSlug
+		return <TlaEditorTopRightPanel isAnonUser={!app} context={fileSlug ? 'file' : 'scratch'} />
 	},
 	TopPanel: () => {
 		const collaborationStatus = useCollaborationStatus()
-		if (collaborationStatus === 'offline') return null
-		return <OfflineIndicator />
+		if (collaborationStatus === 'offline') {
+			return (
+				<div className={styles.offlineIndicatorWrapper}>
+					<OfflineIndicator />{' '}
+				</div>
+			)
+		}
+		return null
 	},
 }
 
 const anonComponents = {
 	...components,
-	SharePanel: null,
-	StylePanel: () => {
-		// When on a temporary file, we don't want to show the people menu or file share menu, just the regular style panel
-		const { fileSlug } = useParams()
-		if (!fileSlug) return <DefaultStylePanel />
-
-		// ...but when an anonymous user is on a shared file, we do want to show the people menu next to the style panel
-		return (
-			<div className={styles.anonStylePanel}>
-				<PeopleMenu />
-				<DefaultStylePanel />
-			</div>
-		)
-	},
 }
 
-export function TlaEditor({
-	fileSlug,
-	onDocumentChange,
-	isCreateMode,
-	deepLinks,
-}: {
+interface TlaEditorProps {
 	fileSlug: string
 	onDocumentChange?(): void
-	isCreateMode?: boolean
+	mode?: TlaFileOpenMode
+	duplicateId?: string
 	deepLinks?: boolean
-}) {
+}
+
+export function TlaEditor(props: TlaEditorProps) {
+	if (props.mode === 'duplicate') {
+		assert(props.duplicateId, 'duplicateId is required when mode is duplicate')
+	} else {
+		assert(!props.duplicateId, 'duplicateId is not allowed when mode is not duplicate')
+	}
+	// force re-mount when the file slug changes to prevent state from leaking between files
+	return (
+		<>
+			<SetDocumentTitle />
+			<ReadyWrapper key={props.fileSlug}>
+				<TlaEditorInner {...props} key={props.fileSlug} />
+			</ReadyWrapper>
+		</>
+	)
+}
+
+function TlaEditorInner({
+	fileSlug,
+	onDocumentChange,
+	mode,
+	deepLinks,
+	duplicateId,
+}: TlaEditorProps) {
 	const handleUiEvent = useHandleUiEvents()
 	const app = useMaybeApp()
 
-	const [ready, setReady] = useState(false)
+	const fileId = fileSlug
 
-	const fileId = TldrawAppFileRecordType.createId(fileSlug)
-
-	useLayoutEffect(() => {
-		setReady(false)
-		// Set the editor to ready after a short delay
-		const timeout = setTimeout(() => setReady(true), 200)
-		return () => {
-			clearTimeout(timeout)
-		}
-	}, [fileId])
+	const setIsReady = useSetIsReady()
 
 	const handleMount = useCallback(
 		(editor: Editor) => {
@@ -118,6 +138,7 @@ export function TlaEditor({
 			;(window as any).editor = editor
 			// Register the editor globally
 			globalEditor.set(editor)
+			setIsReady()
 
 			// Register the external asset handler
 			editor.registerExternalAssetHandler('url', createAssetFromUrl)
@@ -125,12 +146,12 @@ export function TlaEditor({
 			if (!app) return
 			const fileState = app.getFileState(fileId)
 			if (fileState?.lastSessionState) {
-				editor.loadSnapshot({ session: fileState.lastSessionState })
+				editor.loadSnapshot({ session: JSON.parse(fileState.lastSessionState.trim() || 'null') })
 			}
 			const sessionState$ = createSessionStateSnapshotSignal(editor.store)
 			const updateSessionState = throttle((state: TLSessionStateSnapshot) => {
 				app.onFileSessionStateUpdate(fileId, state)
-			}, 500)
+			}, 1000)
 			// don't want to update if they only open the file and didn't look around
 			let firstTime = true
 			const cleanup = react('update session state', () => {
@@ -147,7 +168,7 @@ export function TlaEditor({
 				updateSessionState.cancel()
 			}
 		},
-		[app, fileId]
+		[app, fileId, setIsReady]
 	)
 
 	const user = useTldrawUser()
@@ -158,28 +179,104 @@ export function TlaEditor({
 			if (user) {
 				url.searchParams.set('accessToken', await user.getToken())
 			}
-			if (isCreateMode) {
-				url.searchParams.set('isCreateMode', 'true')
+			if (mode) {
+				url.searchParams.set('mode', mode)
+				if (mode === 'duplicate') {
+					assert(duplicateId, 'duplicateId is required when mode is duplicate')
+					url.searchParams.set('duplicateId', duplicateId)
+				}
 			}
 			return url.toString()
-		}, [user, fileSlug, isCreateMode]),
+		}, [fileSlug, user, mode, duplicateId]),
 		assets: multiplayerAssetStore,
+		userInfo: app?.tlUser.userPreferences,
 	})
 
-	// Handle entering and exiting the file
+	// Handle entering and exiting the file, with some protection against rapid enters/exits
 	useEffect(() => {
 		if (!app) return
 		if (store.status !== 'synced-remote') return
+		let didEnter = false
+		let timer: any
 
-		app.onFileEnter(fileId)
+		const fileState = app.getFileState(fileId)
+
+		if (fileState && fileState.firstVisitAt) {
+			// If there's a file state already then wait a second before marking it as entered
+			timer = tltime.setTimeout(
+				'file enter timer',
+				() => {
+					app.onFileEnter(fileId)
+					didEnter = true
+				},
+				1000
+			)
+		} else {
+			// If there's not a file state yet (i.e. if we're visiting this for the first time) then do an enter
+			app.onFileEnter(fileId)
+			didEnter = true
+		}
+
 		return () => {
-			app.onFileExit(fileId)
+			clearTimeout(timer)
+			if (didEnter) {
+				app.onFileExit(fileId)
+			}
 		}
 	}, [app, fileId, store.status])
 
+	const overrides = useMemo<TLUiOverrides>(() => {
+		if (!app) return {}
+
+		return {
+			actions(editor, actions) {
+				actions['save-file-copy'] = {
+					id: 'save-file-copy',
+					label: 'action.save-copy',
+					readonlyOk: true,
+					kbd: '$s',
+					async onSelect() {
+						handleUiEvent('save-project-to-file', { source: '' })
+						const documentName =
+							((fileSlug ? app?.getFileName(fileSlug, false) : null) ??
+								editor?.getDocumentSettings().name) ||
+							// rather than displaying the date for the project here, display Untitled project
+							'Untitled project'
+						const defaultName =
+							saveFileNames.get(editor.store) || `${documentName}${TLDRAW_FILE_EXTENSION}`
+
+						const blobToSave = serializeTldrawJsonBlob(editor)
+						let handle
+						try {
+							handle = await fileSave(blobToSave, {
+								fileName: defaultName,
+								extensions: [TLDRAW_FILE_EXTENSION],
+								description: 'tldraw project',
+							})
+						} catch {
+							// user cancelled
+							return
+						}
+
+						if (handle) {
+							// we deliberately don't store the handle for re-use
+							// next time. we always want to save a copy, but to
+							// help the user out we'll remember the last name
+							// they used
+							saveFileNames.set(editor.store, handle.name)
+						}
+					},
+				}
+
+				return actions
+			},
+		}
+	}, [app, fileSlug, handleUiEvent])
+
 	return (
-		<div className={styles.editor}>
+		<div className={styles.editor} data-testid="tla-editor">
 			<Tldraw
+				className="tla-editor"
 				store={store}
 				assetUrls={assetUrls}
 				user={app?.tlUser}
@@ -188,22 +285,31 @@ export function TlaEditor({
 				components={!app ? anonComponents : components}
 				options={{ actionShortcutsLocation: 'toolbar' }}
 				deepLinks={deepLinks || undefined}
+				overrides={overrides}
 			>
 				<ThemeUpdater />
 				{/* <CursorChatBubble /> */}
 				<SneakyDarkModeSync />
-				<SneakyTldrawFileDropHandler />
+				{app && <SneakyTldrawFileDropHandler />}
 				<SneakyFileUpdateHandler fileId={fileId} onDocumentChange={onDocumentChange} />
 			</Tldraw>
-			{ready ? null : <div key={fileId + 'overlay'} className={styles.overlay} />}
 		</div>
 	)
 }
 
+// function SneakyThemeUpdater() {
+// 	const editor = useEditor()
+// 	useEffect(() => {
+// 		editor.setTheme('dark')
+// 	}, [editor])
+// }
+
 function SneakyTldrawFileDropHandler() {
 	const editor = useEditor()
 	const app = useMaybeApp()
+	const auth = useAuth()
 	useEffect(() => {
+		if (!auth) return
 		if (!app) return
 		const defaultOnDrop = editor.externalContentHandlers['files']
 		editor.registerExternalContentHandler('files', async (content) => {
@@ -212,12 +318,14 @@ function SneakyTldrawFileDropHandler() {
 			if (tldrawFiles.length > 0) {
 				const snapshots = await getSnapshotsFromDroppedTldrawFiles(editor, tldrawFiles)
 				if (!snapshots.length) return
-				await app.createFilesFromTldrFiles(snapshots)
+				const token = await auth.getToken()
+				if (!token) return
+				await app.createFilesFromTldrFiles(snapshots, token)
 			} else {
 				defaultOnDrop?.(content)
 			}
 		})
-	}, [editor, app])
+	}, [editor, app, auth])
 	return null
 }
 
@@ -226,20 +334,48 @@ function SneakyFileUpdateHandler({
 	fileId,
 }: {
 	onDocumentChange?(): void
-	fileId: TldrawAppFileId
+	fileId: string
 }) {
 	const app = useMaybeApp()
 	const editor = useEditor()
 	useEffect(() => {
-		return editor.store.listen(
+		const onChange = throttle(
 			() => {
 				if (!app) return
 				app.onFileEdit(fileId)
 				onDocumentChange?.()
 			},
-			{ scope: 'document', source: 'user' }
+			// This is used to update the lastEditAt time in the database, and to let the local
+			// room know that an edit ahs been made.
+			// It doesn't need to be super fast or accurate so we can throttle it a lot
+			5000
 		)
+		const unsub = editor.store.listen(onChange, { scope: 'document', source: 'user' })
+		return () => {
+			unsub()
+			onChange.cancel()
+		}
 	}, [app, onDocumentChange, fileId, editor])
 
 	return null
 }
+
+function SetDocumentTitle() {
+	const { fileSlug } = useParams<{ fileSlug: string }>()
+	const app = useMaybeApp()
+	const editor = useValue('editor', () => globalEditor.get(), [])
+	const title = useValue(
+		'title',
+		() =>
+			((fileSlug ? app?.getFileName(fileSlug, false) : null) ??
+				editor?.getDocumentSettings().name) ||
+			// rather than displaying the date for the project here, display Untitled project
+			'Untitled project',
+		[app, editor, fileSlug]
+	)
+	if (!title) return null
+	return <Helmet title={title} />
+}
+
+// A map of previously saved tldr file names, so we can suggest the same name next time
+const saveFileNames = new WeakMap<TLStore, string>()

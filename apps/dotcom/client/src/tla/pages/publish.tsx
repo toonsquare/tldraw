@@ -6,10 +6,10 @@ import { TlaPublishEditor } from '../components/TlaEditor/TlaPublishEditor'
 import { useMaybeApp } from '../hooks/useAppState'
 import { TlaAnonLayout } from '../layouts/TlaAnonLayout/TlaAnonLayout'
 import { TlaSidebarLayout } from '../layouts/TlaSidebarLayout/TlaSidebarLayout'
-import { TlaNotFoundError } from '../utils/notFoundError'
 
 const { loader, useData } = defineLoader(async (args) => {
 	const fileSlug = args.params.fileSlug
+	const { TlaNotFoundError } = await import('../utils/notFoundError')
 	const result = await fetch(`${PUBLISH_ENDPOINT}/${fileSlug}`)
 	if (!result.ok) throw new TlaNotFoundError()
 
@@ -28,7 +28,10 @@ export function Component() {
 	const result = useData()
 	const { roomId, records, schema } = result
 	const app = useMaybeApp()
-	if (!app?.getCurrentUserId()) {
+
+	// todo: only show the anon layout for published files?
+
+	if (!app?.userId) {
 		return (
 			<TlaAnonLayout>
 				<IFrameProtector slug={roomId} context={ROOM_CONTEXT.PUBLIC_SNAPSHOT}>

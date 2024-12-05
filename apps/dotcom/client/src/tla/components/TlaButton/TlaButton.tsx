@@ -9,7 +9,8 @@ export const TlaButton = forwardRef<
 		isLoading?: boolean
 		icon?: string
 		iconRight?: string
-		variant?: 'primary' | 'secondary' | 'warning'
+		ghost?: boolean
+		variant?: 'primary' | 'secondary' | 'warning' | 'cta'
 	}
 >(function TlaButton(
 	{
@@ -17,6 +18,7 @@ export const TlaButton = forwardRef<
 		className = '',
 		icon = '',
 		iconRight = '',
+		ghost = false,
 		variant = 'primary',
 		isLoading = false,
 		onClick,
@@ -31,11 +33,12 @@ export const TlaButton = forwardRef<
 			ref={ref}
 			data-state={isLoading ? 'loading' : 'ready'}
 			className={classNames(
-				'tla-text_ui__medium',
 				styles.button,
 				{
+					[styles.cta]: variant === 'cta',
 					[styles.primary]: variant === 'primary',
 					[styles.secondary]: variant === 'secondary',
+					[styles.ghost]: ghost,
 				},
 				className
 			)}
