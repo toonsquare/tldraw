@@ -315,7 +315,7 @@ const ImageShape = memo(function ImageShape({ shape }: { shape: TLImageShape }) 
 			)}
 			<HTMLContainer
 				id={shape.id}
-				style={{ overflow: 'hidden', width: shape.props.w, height: shape.props.h, filter }}
+				style={{ overflow: 'hidden', width: shape.props.w, height: shape.props.h, filter, borderRadius:shape.meta.roundness ? shape.meta.roundness as number : 0 }}
 			>
 				<div className={classNames('tl-image-container')} style={containerStyle}>
 					{/* We have two images: the currently loaded image, and the next image that
@@ -413,6 +413,8 @@ function getFlipStyle(shape: TLImageShape, size?: { width: number; height: numbe
 
 function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 	const cropClipId = useUniqueSafeId()
+	const maskId = useUniqueSafeId()
+
 	const containerStyle = getCroppedContainerStyle(shape)
 	const crop = shape.props.crop
 	// 이미지 필터 적용
@@ -443,8 +445,11 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 					<clipPath id={cropClipId}>
 						<polygon points={points.map((p) => `${p.x},${p.y}`).join(' ')} />
 					</clipPath>
+					<mask id={maskId}>
+						<rect width={shape.props.w} height={shape.props.h} fill={"#FFFFFF"} rx={shape.meta.roundness ? shape.meta.roundness as number : 0} />
+					</mask>
 				</defs>
-				<g clipPath={`url(#${cropClipId})`}>
+				<g clipPath={`url(#${cropClipId})`} mask={`url(#${maskId})`}>
 					<image
 						href={src}
 						width={width}
@@ -460,7 +465,14 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 		)
 	} else {
 		return (
+			<>
+				<defs>
+					<mask id={maskId}>
+						<rect width={shape.props.w} height={shape.props.h} fill={"#FFFFFF"} rx={shape.meta.roundness ? shape.meta.roundness as number : 0} />
+					</mask>
+				</defs>
 			<image
+				mask={`url(#${maskId})`}
 				href={src}
 				width={shape.props.w}
 				height={shape.props.h}
@@ -469,6 +481,7 @@ function SvgImage({ shape, src }: { shape: TLImageShape; src: string }) {
 					filter
 				}}
 			/>
+		</>
 		)
 	}
 }
