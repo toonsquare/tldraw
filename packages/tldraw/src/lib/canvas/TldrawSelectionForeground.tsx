@@ -10,8 +10,8 @@ import {
 	useEditor,
 	useSelectionEvents,
 	useTransform,
-	useValue,
-} from '@tldraw/editor'
+	useValue, useUniqueSafeId
+} from '@tldraw/editor';
 import classNames from 'classnames'
 import { useRef } from 'react'
 import { useReadonly } from '../ui/hooks/useReadonly'
@@ -179,74 +179,89 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 	}
 
 	const textHandleHeight = Math.min(24 / zoom, height - targetSizeY * 3)
-	const showTextResizeHandles =
-		shouldDisplayControls &&
-		isCoarsePointer &&
-		onlyShape &&
-		editor.isShapeOfType<TLTextShape>(onlyShape, 'text') &&
-		textHandleHeight * zoom >= 4
+	// let showTextResizeHandles =
+	// 	shouldDisplayControls &&
+	// 	isCoarsePointer &&
+	// 	onlyShape &&
+	// 	editor.isShapeOfType<TLTextShape>(onlyShape, 'text') &&
+	// 	textHandleHeight * zoom >= 4
+	const showTextResizeHandles = false  // 기본 가로방향 텍스트 리사이즈 핸들은 무조건 숨김
+
+	let hideVerticalResizeHandle = !showResizeHandles || (width - targetSizeX*3 < (16+8)/zoom); // 기본 사이즈 16, 여유분 절반
+	let hideHorizontalResizeHandle = !showResizeHandles || (height - targetSizeY*3 < (16+8)/zoom);
+
+	if (onlyShape && onlyShape.type === 'text') {
+		hideVerticalResizeHandle = true // 텍스트의 경우 세로 방향 핸들은 무조건 숨김
+	}
 
 	return (
 		<svg className="tl-overlays__item tl-selection__fg" data-testid="selection-foreground">
 			<g ref={rSvg}>
 				{shouldDisplayBox && (
 					<rect
-						className="tl-selection__fg__outline"
+						className='tl-selection__fg__outline'
 						width={toDomPrecision(width)}
 						height={toDomPrecision(height)}
 					/>
 				)}
 				<RotateCornerHandle
-					data-testid="selection.rotate.top-left"
+					data-testid='selection.rotate.top-left'
 					cx={0}
 					cy={0}
 					targetSize={targetSize}
-					corner="top_left_rotate"
+					corner='top_left_rotate'
 					cursor={isDefaultCursor ? getCursor('nwse-rotate', rotation) : undefined}
 					isHidden={hideRotateCornerHandles}
 				/>
 				<RotateCornerHandle
-					data-testid="selection.rotate.top-right"
+					data-testid='selection.rotate.top-right'
 					cx={width + targetSize * 3}
 					cy={0}
 					targetSize={targetSize}
-					corner="top_right_rotate"
+					corner='top_right_rotate'
 					cursor={isDefaultCursor ? getCursor('nesw-rotate', rotation) : undefined}
 					isHidden={hideRotateCornerHandles}
 				/>
 				<RotateCornerHandle
-					data-testid="selection.rotate.bottom-left"
+					data-testid='selection.rotate.bottom-left'
 					cx={0}
 					cy={height + targetSize * 3}
 					targetSize={targetSize}
-					corner="bottom_left_rotate"
+					corner='bottom_left_rotate'
 					cursor={isDefaultCursor ? getCursor('swne-rotate', rotation) : undefined}
 					isHidden={hideRotateCornerHandles}
 				/>
 				<RotateCornerHandle
-					data-testid="selection.rotate.bottom-right"
+					data-testid='selection.rotate.bottom-right'
 					cx={width + targetSize * 3}
 					cy={height + targetSize * 3}
 					targetSize={targetSize}
-					corner="bottom_right_rotate"
+					corner='bottom_right_rotate'
 					cursor={isDefaultCursor ? getCursor('senw-rotate', rotation) : undefined}
 					isHidden={hideRotateCornerHandles}
 				/>
-				<MobileRotateHandle
-					data-testid="selection.rotate.mobile"
-					cx={isSmallX ? -targetSize * 1.5 : width / 2}
-					cy={isSmallX ? height / 2 : -targetSize * 1.5}
-					size={size}
-					isHidden={hideMobileRotateHandle}
+				<CustomRotateHandle
+					data-testid='selection.rotate.mobile'
+					cx={width / 2}
+					cy={height + 26 / zoom}
+					size={36}
+					isHidden={hideRotateCornerHandles && hideMobileRotateHandle}
 				/>
+				{/* <MobileRotateHandle */}
+				{/* 	data-testid="selection.rotate.mobile" */}
+				{/* 	cx={isSmallX ? -targetSize * 1.5 : width / 2} */}
+				{/* 	cy={isSmallX ? height / 2 : -targetSize * 1.5} */}
+				{/* 	size={size} */}
+				{/* 	isHidden={hideMobileRotateHandle} */}
+				{/* /> */}
 				{/* Targets */}
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideVerticalEdgeTargets,
+						'tl-hidden': hideVerticalEdgeTargets
 					})}
-					data-testid="selection.resize.top"
-					aria-label="top target"
-					pointerEvents="all"
+					data-testid='selection.resize.top'
+					aria-label='top target'
+					pointerEvents='all'
 					x={0}
 					y={toDomPrecision(0 - (isSmallY ? targetSizeY * 2 : targetSizeY))}
 					width={toDomPrecision(width)}
@@ -256,11 +271,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideHorizontalEdgeTargets,
+						'tl-hidden': hideHorizontalEdgeTargets
 					})}
-					data-testid="selection.resize.right"
-					aria-label="right target"
-					pointerEvents="all"
+					data-testid='selection.resize.right'
+					aria-label='right target'
+					pointerEvents='all'
 					x={toDomPrecision(width - (isSmallX ? 0 : targetSizeX))}
 					y={0}
 					height={toDomPrecision(height)}
@@ -270,11 +285,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideVerticalEdgeTargets,
+						'tl-hidden': hideVerticalEdgeTargets
 					})}
-					data-testid="selection.resize.bottom"
-					aria-label="bottom target"
-					pointerEvents="all"
+					data-testid='selection.resize.bottom'
+					aria-label='bottom target'
+					pointerEvents='all'
 					x={0}
 					y={toDomPrecision(height - (isSmallY ? 0 : targetSizeY))}
 					width={toDomPrecision(width)}
@@ -284,11 +299,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideHorizontalEdgeTargets,
+						'tl-hidden': hideHorizontalEdgeTargets
 					})}
-					data-testid="selection.resize.left"
-					aria-label="left target"
-					pointerEvents="all"
+					data-testid='selection.resize.left'
+					aria-label='left target'
+					pointerEvents='all'
 					x={toDomPrecision(0 - (isSmallX ? targetSizeX * 2 : targetSizeX))}
 					y={0}
 					height={toDomPrecision(height)}
@@ -296,14 +311,87 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 					style={isDefaultCursor ? { cursor: getCursor('ew-resize', rotation) } : undefined}
 					{...leftEvents}
 				/>
+				{/* 리사이즈 핸들 */}
+				<rect
+					className={classNames({
+						'tl-hidden': hideVerticalResizeHandle
+					})}
+					pointerEvents='all'
+					x={toDomPrecision(width / 2 - 8 / zoom)}
+					y={toDomPrecision(-3 / zoom)}
+					rx={2 / zoom}
+					width={toDomPrecision(16 / zoom)}
+					height={toDomPrecision(6 / zoom)}
+					style={isDefaultCursor ? {
+						cursor: getCursor('ns-resize', rotation),
+						stroke: '#FF2778',
+						strokeWidth: 1 / zoom,
+						fill: '#FFFFFF'
+					} : { stroke: '#FF2778', strokeWidth: 1 / zoom, fill: '#FFFFFF' }}
+					{...topEvents}
+				/>
+				<rect
+					className={classNames({
+						'tl-hidden': hideHorizontalResizeHandle
+					})}
+					pointerEvents='all'
+					x={toDomPrecision(width - 3 / zoom)}
+					y={toDomPrecision(height / 2 - 8 / zoom)}
+					rx={2 / zoom}
+					width={toDomPrecision(6 / zoom)}
+					height={toDomPrecision(16 / zoom)}
+					style={isDefaultCursor ? {
+						cursor: getCursor('ew-resize', rotation),
+						stroke: '#FF2778',
+						strokeWidth: 1 / zoom,
+						fill: '#FFFFFF'
+					} : { stroke: '#FF2778', strokeWidth: 1 / zoom, fill: '#FFFFFF' }}
+					{...rightEvents}
+				/>
+				<rect
+					className={classNames({
+						'tl-hidden': hideVerticalResizeHandle
+					})}
+					pointerEvents='all'
+					x={toDomPrecision(width / 2 - 8 / zoom)}
+					y={toDomPrecision(height - 3 / zoom)}
+					rx={2 / zoom}
+					width={toDomPrecision(16 / zoom)}
+					height={toDomPrecision(6 / zoom)}
+					style={isDefaultCursor ? {
+						cursor: getCursor('ns-resize', rotation),
+						stroke: '#FF2778',
+						strokeWidth: 1 / zoom,
+						fill: '#FFFFFF'
+					} : { stroke: '#FF2778', strokeWidth: 1 / zoom, fill: '#FFFFFF' }}
+					{...bottomEvents}
+				/>
+				<rect
+					className={classNames({
+						'tl-hidden': hideHorizontalResizeHandle
+					})}
+					pointerEvents='all'
+					x={toDomPrecision(-3 / zoom)}
+					y={toDomPrecision(height / 2 - 8 / zoom)}
+					rx={2 / zoom}
+					width={toDomPrecision(6 / zoom)}
+					height={toDomPrecision(16 / zoom)}
+					style={isDefaultCursor ? {
+						cursor: getCursor('ew-resize', rotation),
+						stroke: '#FF2778',
+						strokeWidth: 1 / zoom,
+						fill: '#FFFFFF'
+					} : { stroke: '#FF2778', strokeWidth: 1 / zoom, fill: '#FFFFFF' }}
+					{...leftEvents}
+				/>
 				{/* Corner Targets */}
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideTopLeftCorner,
+						'tl-hidden': hideTopLeftCorner
 					})}
-					data-testid="selection.target.top-left"
-					aria-label="top-left target"
-					pointerEvents="all"
+					data-testid='selection.target.top-left'
+					aria-label='top-left target'
+					pointerEvents='all'
 					x={toDomPrecision(0 - (isSmallX ? targetSizeX * 2 : targetSizeX * 1.5))}
 					y={toDomPrecision(0 - (isSmallY ? targetSizeY * 2 : targetSizeY * 1.5))}
 					width={toDomPrecision(targetSizeX * 3)}
@@ -313,11 +401,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideTopRightCorner,
+						'tl-hidden': hideTopRightCorner
 					})}
-					data-testid="selection.target.top-right"
-					aria-label="top-right target"
-					pointerEvents="all"
+					data-testid='selection.target.top-right'
+					aria-label='top-right target'
+					pointerEvents='all'
 					x={toDomPrecision(width - (isSmallX ? 0 : targetSizeX * 1.5))}
 					y={toDomPrecision(0 - (isSmallY ? targetSizeY * 2 : targetSizeY * 1.5))}
 					width={toDomPrecision(targetSizeX * 3)}
@@ -327,11 +415,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideBottomRightCorner,
+						'tl-hidden': hideBottomRightCorner
 					})}
-					data-testid="selection.target.bottom-right"
-					aria-label="bottom-right target"
-					pointerEvents="all"
+					data-testid='selection.target.bottom-right'
+					aria-label='bottom-right target'
+					pointerEvents='all'
 					x={toDomPrecision(width - (isSmallX ? targetSizeX : targetSizeX * 1.5))}
 					y={toDomPrecision(height - (isSmallY ? targetSizeY : targetSizeY * 1.5))}
 					width={toDomPrecision(targetSizeX * 3)}
@@ -341,11 +429,11 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				/>
 				<rect
 					className={classNames('tl-transparent', {
-						'tl-hidden': hideBottomLeftCorner,
+						'tl-hidden': hideBottomLeftCorner
 					})}
-					data-testid="selection.target.bottom-left"
-					aria-label="bottom-left target"
-					pointerEvents="all"
+					data-testid='selection.target.bottom-left'
+					aria-label='bottom-left target'
+					pointerEvents='all'
 					x={toDomPrecision(0 - (isSmallX ? targetSizeX * 3 : targetSizeX * 1.5))}
 					y={toDomPrecision(height - (isSmallY ? 0 : targetSizeY * 1.5))}
 					width={toDomPrecision(targetSizeX * 3)}
@@ -357,44 +445,44 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				{showResizeHandles && (
 					<>
 						<rect
-							data-testid="selection.resize.top-left"
+							data-testid='selection.resize.top-left'
 							className={classNames('tl-corner-handle', {
-								'tl-hidden': hideTopLeftCorner,
+								'tl-hidden': hideTopLeftCorner
 							})}
-							aria-label="top_left handle"
+							aria-label='top_left handle'
 							x={toDomPrecision(0 - size / 2)}
 							y={toDomPrecision(0 - size / 2)}
 							width={toDomPrecision(size)}
 							height={toDomPrecision(size)}
 						/>
 						<rect
-							data-testid="selection.resize.top-right"
+							data-testid='selection.resize.top-right'
 							className={classNames('tl-corner-handle', {
-								'tl-hidden': hideTopRightCorner,
+								'tl-hidden': hideTopRightCorner
 							})}
-							aria-label="top_right handle"
+							aria-label='top_right handle'
 							x={toDomPrecision(width - size / 2)}
 							y={toDomPrecision(0 - size / 2)}
 							width={toDomPrecision(size)}
 							height={toDomPrecision(size)}
 						/>
 						<rect
-							data-testid="selection.resize.bottom-right"
+							data-testid='selection.resize.bottom-right'
 							className={classNames('tl-corner-handle', {
-								'tl-hidden': hideBottomRightCorner,
+								'tl-hidden': hideBottomRightCorner
 							})}
-							aria-label="bottom_right handle"
+							aria-label='bottom_right handle'
 							x={toDomPrecision(width - size / 2)}
 							y={toDomPrecision(height - size / 2)}
 							width={toDomPrecision(size)}
 							height={toDomPrecision(size)}
 						/>
 						<rect
-							data-testid="selection.resize.bottom-left"
+							data-testid='selection.resize.bottom-left'
 							className={classNames('tl-corner-handle', {
-								'tl-hidden': hideBottomLeftCorner,
+								'tl-hidden': hideBottomLeftCorner
 							})}
-							aria-label="bottom_left handle"
+							aria-label='bottom_left handle'
 							x={toDomPrecision(0 - size / 2)}
 							y={toDomPrecision(height - size / 2)}
 							width={toDomPrecision(size)}
@@ -405,9 +493,9 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				{showTextResizeHandles && (
 					<>
 						<rect
-							data-testid="selection.text-resize.left.handle"
-							className="tl-text-handle"
-							aria-label="bottom_left handle"
+							data-testid='selection.text-resize.left.handle'
+							className='tl-text-handle'
+							aria-label='bottom_left handle'
 							x={toDomPrecision(0 - size / 4)}
 							y={toDomPrecision(height / 2 - textHandleHeight / 2)}
 							rx={size / 4}
@@ -415,9 +503,9 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 							height={toDomPrecision(textHandleHeight)}
 						/>
 						<rect
-							data-testid="selection.text-resize.right.handle"
-							className="tl-text-handle"
-							aria-label="bottom_left handle"
+							data-testid='selection.text-resize.right.handle'
+							className='tl-text-handle'
+							aria-label='bottom_left handle'
 							rx={size / 4}
 							x={toDomPrecision(width - size / 4)}
 							y={toDomPrecision(height / 2 - textHandleHeight / 2)}
@@ -433,7 +521,7 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 							size,
 							width,
 							height,
-							hideAlternateHandles: hideAlternateCropHandles,
+							hideAlternateHandles: hideAlternateCropHandles
 						}}
 					/>
 				)}
@@ -443,14 +531,14 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 })
 
 export const RotateCornerHandle = function RotateCornerHandle({
-	cx,
-	cy,
-	targetSize,
-	corner,
-	cursor,
-	isHidden,
-	'data-testid': testId,
-}: {
+																																cx,
+																																cy,
+																																targetSize,
+																																corner,
+																																cursor,
+																																isHidden,
+																																'data-testid': testId
+																															}: {
 	cx: number
 	cy: number
 	targetSize: number
@@ -459,7 +547,7 @@ export const RotateCornerHandle = function RotateCornerHandle({
 	isHidden: boolean
 	'data-testid'?: string
 }) {
-	const events = useSelectionEvents(corner)
+	const events = useSelectionEvents(corner);
 	return (
 		<rect
 			className={classNames('tl-transparent', 'tl-rotate-corner', { 'tl-hidden': isHidden })}
@@ -478,6 +566,7 @@ export const RotateCornerHandle = function RotateCornerHandle({
 
 const SQUARE_ROOT_PI = Math.sqrt(Math.PI)
 
+// 기존 모바일(펜모드) 회전 핸들러는 사용 X
 export const MobileRotateHandle = function RotateHandle({
 	cx,
 	cy,
@@ -513,6 +602,56 @@ export const MobileRotateHandle = function RotateHandle({
 				cx={cx}
 				cy={cy}
 				r={size / SQUARE_ROOT_PI}
+			/>
+		</g>
+	)
+}
+
+export const CustomRotateHandle = function RotateHandle({
+	cx,
+	cy,
+	size,
+	isHidden,
+	'data-testid': testId,
+}: {
+	cx: number
+	cy: number
+	size: number
+	isHidden: boolean
+	'data-testid'?: string
+}) {
+	const clipPathId = useUniqueSafeId()
+	const events = useSelectionEvents('mobile_rotate')
+
+	const editor = useEditor()
+	const zoom = useValue('zoom level', () => editor.getZoomLevel(), [editor])
+	const bgRadius = size / zoom / 2
+
+	return (
+		<g>
+			<circle
+				data-testid={testId}
+				pointerEvents="all"
+				style={{fill:'#FFFFFF',stroke:'#e0e0e0',strokeWidth:1/zoom}}
+				className={classNames('tl-transparent', 'tl-mobile-rotate__bg', { 'tl-hidden': isHidden })}
+				cx={cx}
+				cy={cy}
+				r={bgRadius}
+				{...events}
+			/>
+
+			<clipPath id={clipPathId}>
+				<circle cx={cx} cy={cy} r={bgRadius} />
+			</clipPath>
+
+			<image
+				href={'icons/refresh.svg'} // 이거 그냥 고정을 박아둔건데 tldraw에서 static assets에 등록하고 쓰는게 원래 맞는 방식이긴함 (asseturl로 검색)
+				className={classNames('tl-mobile-rotate__fg', { 'tl-hidden': isHidden })}
+				x={cx - 10/zoom}
+				y={cy - 10/zoom}
+				width={20/zoom}
+				height={20/zoom}
+				clipPath={`url(#${clipPathId})`}
 			/>
 		</g>
 	)

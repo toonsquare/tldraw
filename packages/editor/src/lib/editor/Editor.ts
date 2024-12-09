@@ -9545,8 +9545,9 @@ export class Editor extends EventEmitter<TLEventMap> {
 						inputs.isPointing = true
 						inputs.isDragging = false
 
+						// 펜 갖다 대기만하면 강제로 펜모드 바꾸는거 없앰
 						// If pen mode is off but we're not already in pen mode, turn that on
-						if (!isPenMode && isPen) this.updateInstanceState({ isPenMode: true })
+						// if (!isPenMode && isPen) this.updateInstanceState({ isPenMode: true })
 
 						// On devices with erasers (like the Surface Pen or Wacom Pen), button 5 is the eraser
 						if (info.button === STYLUS_ERASER_BUTTON) {
