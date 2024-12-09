@@ -35,7 +35,7 @@ export function GeoShapeBody({
 	const theme = useDefaultColorTheme()
 	const { id, props } = shape
 	const { w, color, fill, dash, growY, size, scale } = props
-	const strokeWidth = STROKE_SIZES[size] * scaleToUse
+	const strokeWidth = (shape.meta.strokeWidth as number || STROKE_SIZES[size]) * scaleToUse
 	const h = props.h + growY
 
 	switch (props.geo) {
@@ -44,16 +44,16 @@ export function GeoShapeBody({
 				const d = getCloudPath(w, h, id, size, scale)
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			} else if (dash === 'draw') {
 				const d = inkyCloudSvgPath(w, h, id, size, scale)
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			} else {
@@ -62,10 +62,10 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
 						<g
 							strokeWidth={strokeWidth}
-							stroke={theme[color].solid}
+							stroke={shape.meta.stroke as string || theme[color].solid}
 							fill="none"
 							pointerEvents="all"
 						>
@@ -130,12 +130,12 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
 						<path
 							d={d}
 							strokeWidth={strokeWidth}
 							fill="none"
-							stroke={theme[color].solid}
+							stroke={shape.meta.stroke as string || theme[color].solid}
 							strokeDasharray={strokeDasharray}
 							strokeDashoffset={strokeDashoffset}
 						/>
@@ -150,8 +150,8 @@ export function GeoShapeBody({
 				const d = geometry.getSvgPathData(true)
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			}
@@ -180,12 +180,12 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
 						<path
 							d={d}
 							strokeWidth={strokeWidth}
 							fill="none"
-							stroke={theme[color].solid}
+							stroke={shape.meta.stroke as string || theme[color].solid}
 							strokeDasharray={strokeDasharray}
 							strokeDashoffset={strokeDashoffset}
 						/>
@@ -194,8 +194,8 @@ export function GeoShapeBody({
 			} else {
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			}
@@ -207,7 +207,7 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
 						{curves.map((c, i) => {
 							const { strokeDasharray, strokeDashoffset } = getPerfectDashProps(
 								c.length,
@@ -227,7 +227,7 @@ export function GeoShapeBody({
 									d={c.getSvgPathData()}
 									strokeWidth={strokeWidth}
 									fill="none"
-									stroke={theme[color].solid}
+									stroke={shape.meta.stroke as string || theme[color].solid}
 									strokeDasharray={strokeDasharray}
 									strokeDashoffset={strokeDashoffset}
 									pointerEvents="all"
@@ -240,8 +240,8 @@ export function GeoShapeBody({
 				const d = getDrawHeartPath(w, h, strokeWidth, shape.id)
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			}
@@ -268,8 +268,8 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			} else if (dash === 'dashed' || dash === 'dotted') {
@@ -277,10 +277,10 @@ export function GeoShapeBody({
 
 				return (
 					<>
-						<ShapeFill theme={theme} d={d} color={color} fill={fill} scale={scaleToUse} />
+						<ShapeFill theme={theme} d={d} color={shape.meta.fill as string || color} fill={fill} scale={scaleToUse} />
 						<g
 							strokeWidth={strokeWidth}
-							stroke={theme[color].solid}
+							stroke={shape.meta.stroke as string || theme[color].solid}
 							fill="none"
 							pointerEvents="all"
 						>
@@ -362,11 +362,11 @@ export function GeoShapeBody({
 						<ShapeFill
 							theme={theme}
 							d={innerPathData}
-							color={color}
+							color={shape.meta.fill as string || color}
 							fill={fill}
 							scale={scaleToUse}
 						/>
-						<path d={d} stroke={theme[color].solid} strokeWidth={strokeWidth} fill="none" />
+						<path d={d} stroke={shape.meta.stroke as string || theme[color].solid} strokeWidth={strokeWidth} fill="none" />
 					</>
 				)
 			}

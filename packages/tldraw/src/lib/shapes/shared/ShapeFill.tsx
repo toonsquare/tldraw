@@ -1,18 +1,19 @@
 import {
+	defaultColorNames,
 	TLDefaultColorStyle,
 	TLDefaultColorTheme,
 	TLDefaultFillStyle,
 	useEditor,
 	useSvgExportContext,
-	useValue,
-} from '@tldraw/editor'
+	useValue
+} from '@tldraw/editor';
 import React from 'react'
 import { useGetHashPatternZoomName } from './defaultStyleDefs'
 
 interface ShapeFillProps {
 	d: string
 	fill: TLDefaultFillStyle
-	color: TLDefaultColorStyle
+	color: TLDefaultColorStyle | string
 	theme: TLDefaultColorTheme
 	scale: number
 }
@@ -29,13 +30,13 @@ export const ShapeFill = React.memo(function ShapeFill({
 			return null
 		}
 		case 'solid': {
-			return <path fill={theme[color].semi} d={d} />
+			return <path fill={defaultColorNames.includes(color as TLDefaultColorStyle) ? theme[color as TLDefaultColorStyle].semi : color} d={d} />
 		}
 		case 'semi': {
 			return <path fill={theme.solid} d={d} />
 		}
 		case 'fill': {
-			return <path fill={theme[color].fill} d={d} />
+			return <path fill={defaultColorNames.includes(color as TLDefaultColorStyle) ? theme[color as TLDefaultColorStyle].fill : color} d={d} />
 		}
 		case 'pattern': {
 			return <PatternFill theme={theme} color={color} fill={fill} d={d} scale={scale} />
@@ -53,13 +54,13 @@ export function PatternFill({ d, color, theme }: ShapeFillProps) {
 
 	return (
 		<>
-			<path fill={theme[color].pattern} d={d} />
+			<path fill={defaultColorNames.includes(color as TLDefaultColorStyle) ? theme[color as TLDefaultColorStyle].pattern : color} d={d} />
 			<path
 				fill={
 					svgExport
 						? `url(#${getHashPatternZoomName(1, theme.id)})`
 						: teenyTiny
-							? theme[color].semi
+							? (defaultColorNames.includes(color as TLDefaultColorStyle) ?theme[color as TLDefaultColorStyle].semi : color)
 							: `url(#${getHashPatternZoomName(zoomLevel, theme.id)})`
 				}
 				d={d}
