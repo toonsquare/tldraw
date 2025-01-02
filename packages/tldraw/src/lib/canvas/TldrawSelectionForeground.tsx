@@ -243,7 +243,7 @@ export const TldrawSelectionForeground = track(function TldrawSelectionForegroun
 				<CustomRotateHandle
 					data-testid='selection.rotate.mobile'
 					cx={width / 2}
-					cy={height + 26 / zoom}
+					cy={onlyShape&&onlyShape.rotation>2.35&&onlyShape.rotation<3.93 ? -26/zoom : height + 26 / zoom}
 					size={36}
 					isHidden={hideRotateCornerHandles && hideMobileRotateHandle}
 				/>
