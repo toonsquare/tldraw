@@ -150,7 +150,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 						width={bounds.width}
 						height={bounds.height}
 						fill={(shape.meta.fill as string) || theme.solid}
-						stroke={theme.text}
+						stroke={'#f1f1f1'}
 					/>
 				</SVGContainer>
 				{isCreating ? null : (
