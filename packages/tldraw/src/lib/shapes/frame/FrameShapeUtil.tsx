@@ -185,7 +185,7 @@ export class FrameShapeUtil extends BaseBoxShapeUtil<TLFrameShape> {
 					height={shape.props.h}
 					fill={(shape.meta.fill as string) || theme.solid}
 					stroke={theme.black.solid}
-					strokeWidth={1}
+					strokeWidth={0}
 					rx={1}
 					ry={1}
 				/>

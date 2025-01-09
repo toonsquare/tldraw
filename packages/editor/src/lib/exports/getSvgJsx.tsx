@@ -37,7 +37,6 @@ import { ExportDelay } from './ExportDelay'
 
 export function getSvgJsx(editor: Editor, ids: TLShapeId[], opts: TLImageExportOptions = {}) {
 	if (!window.document) throw Error('No document')
-	debugger;
 
 	const {
 		scale = 1,
