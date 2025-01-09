@@ -20,7 +20,7 @@ export function SvgTextLabel({
 	labelColor,
 	bounds,
 	padding = 16,
-	stroke = true,
+	stroke = false,
 }: {
 	fontSize: number
 	font: TLDefaultFontStyle
