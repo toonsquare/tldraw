@@ -1,3 +1,15 @@
+# v3.7.0 (Tue Jan 07 2025)
+
+#### 🐛 Bug Fixes
+
+- fix stale closure in InnerShape [#5117](https://github.com/tldraw/tldraw/pull/5117) ([@ds300](https://github.com/ds300))
+
+#### Authors: 1
+
+- David Sheldrick ([@ds300](https://github.com/ds300))
+
+---
+
 # v3.6.1 (Tue Dec 17 2024)
 
 #### 🐛 Bug Fix

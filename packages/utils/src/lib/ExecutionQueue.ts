@@ -1,5 +1,6 @@
-import { sleep } from '@tldraw/utils'
+import { sleep } from './control'
 
+/** @internal */
 export class ExecutionQueue {
 	private queue: (() => Promise<any>)[] = []
 	private running = false
@@ -29,5 +30,9 @@ export class ExecutionQueue {
 			this.queue.push(() => Promise.resolve(task()).then(resolve).catch(reject))
 			this.run()
 		})
+	}
+
+	close() {
+		this.queue = []
 	}
 }
