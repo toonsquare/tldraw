@@ -15,7 +15,7 @@ export function FrameHeading({
 	height: number
 }) {
 	const editor = useEditor()
-	const { side, translation } = useValue(
+	const { side, translation, pageNumber } = useValue(
 		'shape rotation',
 		() => {
 			const shape = editor.getShape<TLFrameShape>(id)
@@ -24,12 +24,14 @@ export function FrameHeading({
 				return {
 					side: 0,
 					translation: 'translate(0, 0)',
+					pageNumber: 0
 				}
 			}
 			const labelSide = getFrameHeadingSide(editor, shape)
 			return {
 				side: labelSide,
 				translation: getFrameHeadingTranslation(shape, labelSide, false),
+				pageNumber: shape.meta.pageNum || 0
 			}
 		},
 		[editor, id]
@@ -60,6 +62,7 @@ export function FrameHeading({
 			}}
 		>
 			<div className="tl-frame-heading-hit-area">
+				<div style={{ paddingLeft: 8, paddingRight: isEditing ? 8 : 0 }}>{pageNumber as number}</div>
 				<FrameLabelInput ref={rInput} id={id} name={name} isEditing={isEditing} />
 			</div>
 		</div>
