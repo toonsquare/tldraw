@@ -24,6 +24,8 @@ export class Erasing extends StateNode {
 			this.editor
 				.getCurrentPageShapes()
 				.filter((shape) => {
+					// 연필로 그린 shape만 지우도록 조건 추가
+					if (shape.type !== 'draw') return true
 					//If the shape is locked, we shouldn't erase it
 					if (this.editor.isShapeOrAncestorLocked(shape)) return true
 					//If the shape is a group or frame, check we're inside it when we start erasing
